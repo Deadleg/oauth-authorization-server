@@ -1,0 +1,117 @@
+
+<html>
+    <head>
+        <title>Clients</title>
+        {{ template "header" }}
+    </head>
+    <body>
+        <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+            {{ template "navbar" .page }}
+            <main class="mdl-layout__content">
+                <div class="page-content">
+                    <div class="mdl-grid">
+                        <div class="mdl-layout-spacer"></div>
+                        <div class="mdl-cell mdl-cell-6--col">
+                            <button id="show-create-dialog" type="button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent">Create client</button>
+                            <dialog id="create-dialog" class="mdl-dialog">
+                                <h4 class="mdl-dialog__title">New client</h4>
+                                <div class="mdl-dialog__content">
+                                    <p id="new-client-id"></p>
+                                    <p id="new-client-secret"></p>
+                                    <p id="reload-message" style="display: none;">Refreshing clients...</p>
+                                    <div id="loading-spinner" class="mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active" style="display: none;"></div> </div>
+                                <div class="mdl-dialog__actions">
+                                    <button type="button" class="mdl-button close">Close</button>
+                                </div>
+                            </dialog>
+                            <script>
+                                var dialog = document.querySelector('#create-dialog');
+                                var showDialogButton = document.querySelector('#show-create-dialog');
+                                if (!dialog.showModal) {
+                                    dialogPolyfill.registerDialog(dialog);
+                                }
+                                showDialogButton.addEventListener('click', function() {
+                                    dialog.showModal();
+                                    $.get("/admin/clients/create", function(data) {
+                                        document.getElementById("new-client-id").innerText = data.ClientId;
+                                        document.getElementById("new-client-secret").innerText = data.ClientSecret;
+                                    })
+                                });
+                                dialog.querySelector('.close').addEventListener('click', function() {
+                                    document.getElementById('loading-spinner').style.display = 'block';
+                                    document.getElementById("new-client-id").style.display = 'none';
+                                    document.getElementById("new-client-secret").style.display = 'none';
+                                    document.getElementById("reload-message").style.display = 'block';
+                                    location.reload();
+                                });
+                            </script>
+                        </div>
+                        <div class="mdl-layout-spacer"></div>
+                    </div>
+                    <div class="mdl-grid">
+                        <div class="mdl-layout-spacer"></div>
+                        <div class="mdl-cell mdl-cell-6--col">
+                            <table class="mdl-data-table mdl-js-data-table full-width">
+                                <thead>
+                                    <th class="mdl-data-table__cell--non-numeric">ID</th>
+                                    <th class="mdl-data-table__cell--non-numeric">Secret</th>
+                                    <th class="mdl-data-table__cell--non-numeric">Owner</th>
+                                    <th class="mdl-data-table__cell--non-numeric">Actions </th>
+                                </thead>
+                                <tbody>
+                                    {{ range $index, $client := .page.Clients }}
+                                    <tr>
+                                        <td class="mdl-data-table__cell--non-numeric">{{ $client.Client.ID }}</td>
+                                        <td class="mdl-data-table__cell--non-numeric">{{ $client.Client.Secret }}</td>
+                                        <td class="mdl-data-table__cell--non-numeric">{{ $client.User.Username }}</td>
+                                        <td class="mdl-data-table__cell--non-numeric">
+                                            <button id="show-delete-dialog-{{ $client.Client.ID }}" type="button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent">Delete</button>
+                                            <dialog id="delete-dialog-{{ $client.Client.ID }}" class="mdl-dialog">
+                                                <div class="mdl-dialog__content">
+                                                    <p>Are you sure you want to delete {{ $client.Client.ID }}</p>
+                                                    <p id="reload-message-{{ $client.Client.ID }}" style="display: none;">Refreshing clients...</p>
+                                                    <div id="loading-spinner-{{ $client.Client.ID }}" class="mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active" style="display: none;"></div>
+                                                </div>
+                                                <div class="mdl-dialog__actions">
+                                                    <button id="confirm-delete-{{ $client.Client.ID }}" type="button" class="mdl-button close">Delete</button>
+                                                    <button id="close-delete-{{ $client.Client.ID }}" type="button" class="mdl-button close">Cancel</button>
+                                                </div>
+                                            </dialog>
+                                            <script>
+                                                $(function() {
+                                                    var dialog = document.getElementById('delete-dialog-{{ $client.Client.ID }}');
+                                                    var showDialogButton = document.getElementById('show-delete-dialog-{{ $client.Client.ID }}');
+                                                    if (!dialog.showModal) {
+                                                        dialogPolyfill.registerDialog(dialog);
+                                                    }
+
+                                                    showDialogButton.addEventListener('click', function() {
+                                                        dialog.showModal();
+                                                    });
+
+                                                    dialog.querySelector('#confirm-delete-{{ $client.Client.ID }}').addEventListener('click', function() {
+                                                        document.getElementById('loading-spinner-{{ $client.Client.ID }}').style.display = 'block';
+                                                        document.getElementById("reload-message-{{ $client.Client.ID }}").style.display = 'block';
+                                                        $.post("/admin/clients/delete/{{ $client.Client.ID }}", {"gorilla.csrf.Token": "{{ $.csrfField }}"}, function(data) {
+                                                            location.reload();
+                                                        });
+                                                    });
+
+                                                    dialog.querySelector('#close-delete-{{ $client.Client.ID }}').addEventListener('click', function() {
+                                                        dialog.close();
+                                                    });
+                                                });
+                                            </script>
+                                        </td>
+                                    </tr>
+                                    {{ end }}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mdl-layout-spacer"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </body>
+</html>
