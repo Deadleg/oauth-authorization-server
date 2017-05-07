@@ -13,11 +13,12 @@ import (
 
 // Client entity for "clients" table
 type Client struct {
-	ID          string `db:"id"`
-	Secret      string
-	Extra       string
-	RedirectURI string `db:"redirect_uri"`
-	Owner       int
+	ID                 string `db:"id"`
+	Secret             string
+	Extra              string
+	RedirectURI        string `db:"redirect_uri"`
+	Owner              int
+	RateLimitPerSecond int `db:"rate_limit_per_second"`
 }
 
 // AccessToken entity for "access_token" table

@@ -1,10 +1,11 @@
 -- +goose Up
 CREATE TABLE IF NOT EXISTS clients (
-	id           varchar(255) NOT NULL PRIMARY KEY,
-	secret 		 varchar(255) NOT NULL,
-	extra 		 varchar(255) NOT NULL,
-	redirect_uri varchar(255) NOT NULL,
-	owner		 int(255),
+	id           		  varchar(255) NOT NULL PRIMARY KEY,
+	secret 		 		  varchar(255) NOT NULL,
+	extra 		 		  varchar(255) NOT NULL,
+	redirect_uri 		  varchar(255) NOT NULL,
+	rate_limit_per_second int NOT NULL default 60,
+	owner		 		  int(255),
     FOREIGN KEY (owner)
         REFERENCES users(id)
         ON DELETE CASCADE 

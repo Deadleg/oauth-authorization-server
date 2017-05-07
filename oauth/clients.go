@@ -20,6 +20,7 @@ type NewClient struct {
 
 type ClientService interface {
 	GetClients() (*[]Client, error)
+	GetClient(clientID string) (*Client, error)
 	CreateClient(NewClient) error
 	DeleteClient(id string) error
 }
@@ -36,11 +37,26 @@ func (cs MysqlClientService) GetClients() (*[]Client, error) {
 	clients := &[]Client{}
 	err := cs.db.Select(
 		clients,
-		`SELECT id, secret, extra, redirect_uri, owner FROM clients`)
+		`SELECT id, secret, extra, redirect_uri, owner, rate_limit_per_second
+		 FROM clients`)
 	if err != nil {
 		return nil, err
 	}
 	return clients, nil
+}
+
+func (cs MysqlClientService) GetClient(clientID string) (*Client, error) {
+	client := &Client{}
+	err := cs.db.Get(
+		client,
+		`SELECT id, secret, extra, redirect_uri, owner, rate_limit_per_second
+		 FROM clients
+		 WHERE id=?`,
+		clientID)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
 func (cs MysqlClientService) CreateClient(c NewClient) error {

@@ -2,16 +2,14 @@ package admin
 
 import (
 	"context"
+	"encoding/json"
 	"html/template"
 	"net/http"
 	"net/url"
 
-	"flavouredproductions.com/oauth-authorization-server/users"
-
-	"encoding/json"
-
 	"flavouredproductions.com/oauth-authorization-server/auth"
 	"flavouredproductions.com/oauth-authorization-server/oauth"
+	"flavouredproductions.com/oauth-authorization-server/users"
 	"github.com/RangelReale/osin"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
@@ -38,7 +36,6 @@ func SetupHandlers(
 	cs oauth.ClientService,
 	sessionStore *sessions.CookieStore,
 	cookieName string) {
-
 	adminHandler := &adminHandler{
 		users:        us,
 		oauthStorage: storage,
@@ -57,7 +54,6 @@ func SetupHandlers(
 	s.Methods("POST").Path("/clients/delete/{ID}").HandlerFunc(adminHandler.deleteClientHandler)
 
 	r.PathPrefix("/admin").Handler(http.StripPrefix("/admin", n))
-
 }
 
 type Client struct {

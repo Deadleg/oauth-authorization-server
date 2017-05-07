@@ -50,7 +50,7 @@ func main() {
 	n.UseHandler(r)
 
 	server := osin.NewServer(config, storage)
-	oauth.SetupAuthorizationServer(r, server)
+	oauth.SetupAuthorizationServer(r, server, clientService)
 	auth.SetupHandlers(r, userService, sessionStore, cookieName)
 	admin.SetupHandlers(r, storage, userService, clientService, sessionStore, cookieName)
 	http.Handle("/", n)

@@ -56,6 +56,7 @@
                                     <th class="mdl-data-table__cell--non-numeric">ID</th>
                                     <th class="mdl-data-table__cell--non-numeric">Secret</th>
                                     <th class="mdl-data-table__cell--non-numeric">Owner</th>
+                                    <th class="mdl-data-table__cell--non-numeric">Rate limit/s</th>
                                     <th class="mdl-data-table__cell--non-numeric">Actions </th>
                                 </thead>
                                 <tbody>
@@ -64,6 +65,7 @@
                                         <td class="mdl-data-table__cell--non-numeric">{{ $client.Client.ID }}</td>
                                         <td class="mdl-data-table__cell--non-numeric">{{ $client.Client.Secret }}</td>
                                         <td class="mdl-data-table__cell--non-numeric">{{ $client.User.Username }}</td>
+                                        <td class="mdl-data-table__cell--non-numeric">{{ $client.Client.RateLimitPerSecond }}</td>
                                         <td class="mdl-data-table__cell--non-numeric">
                                             <button id="show-delete-dialog-{{ $client.Client.ID }}" type="button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent">Delete</button>
                                             <dialog id="delete-dialog-{{ $client.Client.ID }}" class="mdl-dialog">
