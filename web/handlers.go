@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"net/url"
 
-	"flavouredproductions.com/oauth-authorization-server/auth"
-	"flavouredproductions.com/oauth-authorization-server/oauth"
-	"flavouredproductions.com/oauth-authorization-server/users"
+	"github.com/deadleg/oauth-authorization-server/auth"
+	"github.com/deadleg/oauth-authorization-server/oauth"
+	"github.com/deadleg/oauth-authorization-server/users"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 )
 
@@ -25,6 +27,8 @@ type webHandler struct {
 const (
 	templatesFolder = "templates/web/"
 )
+
+var upgrader = websocket.Upgrader{}
 
 func SetupHandlers(
 	r *mux.Router,
@@ -48,6 +52,7 @@ func SetupHandlers(
 	s.Methods("GET").Path("/account/clients").HandlerFunc(h.clientsHandler)
 	s.Methods("GET").Path("/account/clients/create").HandlerFunc(h.createClientHandler)
 	s.Methods("POST").Path("/account/clients/delete/{ID}").HandlerFunc(h.deleteClientHandler)
+	s.Path("/ws/account/clients/{ID}").HandlerFunc(h.activityWebsocket)
 
 	r.PathPrefix("/").Handler(n)
 }
@@ -67,6 +72,14 @@ type IndexPage struct {
 	AppName      string
 	Title        string
 	SignedInUser auth.SignedInUser
+}
+
+func (h webHandler) activityWebsocket(w http.ResponseWriter, r *http.Request) {
+	c, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Error("Failed to open websocket ", err)
+	}
+	defer c.Close()
 }
 
 func (h webHandler) indexHandler(w http.ResponseWriter, r *http.Request) {

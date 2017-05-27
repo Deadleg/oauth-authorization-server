@@ -1,5 +1,5 @@
-hash: 3441bf6ff6d443d7e65fcdfc4f1d1b67e506cee012ed3b4901bbe2aab9890aa9
-updated: 2017-05-05T08:43:43.768542757+12:00
+hash: 5fcc64950b48c5b50bb8a680677f6238c631f8576eacf4e6adcb0db65ae8f084
+updated: 2017-05-27T19:05:21.7562397+12:00
 imports:
 - name: github.com/go-sql-driver/mysql
   version: ae5a66df4d33ba404d639bd0fc9189cd5ee79bcf
@@ -13,6 +13,8 @@ imports:
   version: e59506cc896acb7f7bf732d4fdf5e25f7ccd8983
 - name: github.com/gorilla/sessions
   version: 8b6b4cd75f07f7ee036eb37b8127bd40ab1efc49
+- name: github.com/gorilla/websocket
+  version: 3ab3a8b8831546bd18fd182c20687ca853b2bb13
 - name: github.com/jmoiron/sqlx
   version: d9bd385d68c068f1fabb5057e3dedcbcbb039d0f
   subpackages:
@@ -23,6 +25,12 @@ imports:
   version: ff09b135c25aae272398c51a07235b90a75aa4f0
 - name: github.com/RangelReale/osin
   version: 5435fcd4a4d93d603202c4a69edb10bd060f0571
+- name: github.com/sirupsen/logrus
+  version: 5e5dc898656f695e2a086b8e12559febbfc01562
 - name: github.com/urfave/negroni
   version: 65195ccb1c6e8f08b80dd531a1e1ceca265f7c8c
+- name: golang.org/x/sys
+  version: a55a76086885b80f79961eacb876ebd8caf3868d
+  subpackages:
+  - unix
 testImports: []

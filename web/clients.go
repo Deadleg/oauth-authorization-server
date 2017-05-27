@@ -6,8 +6,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"flavouredproductions.com/oauth-authorization-server/auth"
-	"flavouredproductions.com/oauth-authorization-server/oauth"
+	"github.com/deadleg/oauth-authorization-server/auth"
+	"github.com/deadleg/oauth-authorization-server/oauth"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 )
