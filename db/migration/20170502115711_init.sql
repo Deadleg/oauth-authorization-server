@@ -2,8 +2,8 @@
 CREATE TABLE IF NOT EXISTS clients (
 	id           		  varchar(255) NOT NULL PRIMARY KEY,
 	secret 		 		  varchar(255) NOT NULL,
-	extra 		 		  varchar(255) NOT NULL,
-	redirect_uri 		  varchar(255) NOT NULL,
+	extra 		 		  varchar(255),
+	redirect_uri 		  varchar(255),
 	rate_limit_per_second int NOT NULL default 60,
 	owner		 		  int(255),
     FOREIGN KEY (owner)
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS authorization_tokens (
 	scope        varchar(255) NOT NULL,
 	redirect_uri varchar(255) NOT NULL,
 	state        varchar(255) NOT NULL,
-	extra 		 varchar(255) NOT NULL,
+	extra 		 varchar(255),
 	created_at   timestamp NOT NULL,
     FOREIGN KEY (client)
         REFERENCES clients(id)
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS access_tokens (
 	expires_in    int(10) NOT NULL,
 	scope         varchar(255) NOT NULL,
 	redirect_uri  varchar(255) NOT NULL,
-	extra 		  varchar(255) NOT NULL,
+	extra 		  varchar(255),
 	created_at    timestamp NOT NULL,
     FOREIGN KEY (client)
         REFERENCES clients(id)

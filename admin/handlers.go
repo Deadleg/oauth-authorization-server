@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"net/url"
 
-	"flavouredproductions.com/oauth-authorization-server/auth"
-	"flavouredproductions.com/oauth-authorization-server/oauth"
-	"flavouredproductions.com/oauth-authorization-server/users"
 	"github.com/RangelReale/osin"
+	"github.com/deadleg/oauth-authorization-server/auth"
+	"github.com/deadleg/oauth-authorization-server/oauth"
+	"github.com/deadleg/oauth-authorization-server/users"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
