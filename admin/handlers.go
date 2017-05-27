@@ -25,7 +25,7 @@ type adminHandler struct {
 	cookieName   string
 }
 
-var (
+const (
 	templatesFolder = "templates/admin/"
 )
 
@@ -95,10 +95,11 @@ func (ad adminHandler) deleteClientHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (ad adminHandler) createClientHandler(w http.ResponseWriter, r *http.Request) {
+	ownerID, _ := ad.sessions.Get(r, ad.cookieName)
 	newClient := oauth.NewClient{
 		ClientId:     oauth.RandStringRunes(10),
 		ClientSecret: oauth.RandStringRunes(15),
-		Owner:        1,
+		Owner:        ownerID.Values["UserId"].(int),
 		RedirectUri:  "http://example.com",
 	}
 	ad.clients.CreateClient(newClient)

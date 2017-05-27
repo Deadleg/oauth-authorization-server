@@ -7,6 +7,8 @@ import (
 
 	"encoding/json"
 
+	"time"
+
 	"github.com/RangelReale/osin"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
@@ -15,16 +17,18 @@ import (
 type OAuthHandler struct {
 	server      *osin.Server
 	rateLimiter *RateLimiterPool
+	counter     Counter
 }
 
 // SetupAuthorizationServer adds http handlers for the authorization server
-func SetupAuthorizationServer(r *mux.Router, osinServer *osin.Server, clientService ClientService) {
+func SetupAuthorizationServer(r *mux.Router, osinServer *osin.Server, clientService ClientService, counter Counter) {
 	h := OAuthHandler{
 		server:      osinServer,
 		rateLimiter: MakeRateLimiter(clientService),
+		counter:     counter,
 	}
 
-	n := negroni.New(negroni.HandlerFunc(h.rateLimitMiddleware))
+	n := negroni.New(negroni.HandlerFunc(h.counterMiddleware), negroni.HandlerFunc(h.rateLimitMiddleware))
 	o := mux.NewRouter()
 	n.UseHandler(o)
 	o.HandleFunc("/token", h.tokenHandler)
@@ -92,4 +96,14 @@ func (h OAuthHandler) rateLimitMiddleware(rw http.ResponseWriter, r *http.Reques
 	} else {
 		next(rw, r)
 	}
+}
+
+func (h OAuthHandler) counterMiddleware(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	r.ParseForm()
+	clientID := r.Form["client_id"][0]
+	h.counter.Add(&Event{
+		ClientID: clientID,
+		Time:     time.Now()})
+
+	next(rw, r)
 }

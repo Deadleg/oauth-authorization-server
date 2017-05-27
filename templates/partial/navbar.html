@@ -6,26 +6,32 @@
         <span class="mdl-layout-title">{{ .Title }}</span>
         <!-- Navigation. We hide it in small screens. -->
         <nav class="mdl-navigation mdl-layout--large-screen-only">
-            <a class="mdl-navigation__link" href="">Clients</a>
-            <a class="mdl-navigation__link" href="">Tokens</a>
-            <a class="mdl-navigation__link" href="">Users</a>
+            <a class="mdl-navigation__link" href="/account/clients">Clients</a>
+            <a class="mdl-navigation__link" href="/account/settings">Users</a>
         </nav>
         <!-- Add spacer, to align navigation to the right -->
         <div class="mdl-layout-spacer"></div>
         <nav class="mdl-navigation mdl-layout--large-screen-only">
+            {{ if .SignedInUser.Username }}
             <a class="mdl-navigation__link" href="/auth/account">{{ .SignedInUser.Username }}</a>
             <a class="mdl-navigation__link" href="/auth/signout">Sign out</a>
+            {{ else }}
+            <a class="mdl-navigation__link" href="/auth/login">Sign in</a>
+            {{ end }}
         </nav>
     </div>
 </header>
 <div class="mdl-layout__drawer">
     <span class="mdl-layout-title">{{ .Title }}</span>
     <nav class="mdl-navigation">
-        <a class="mdl-navigation__link" href="">Clients</a>
-        <a class="mdl-navigation__link" href="">Tokens</a>
-        <a class="mdl-navigation__link" href="">Users</a>
+        <a class="mdl-navigation__link" href="/account/clients">Clients</a>
+        <a class="mdl-navigation__link" href="/account/settings">Users</a>
+        {{ if .SignedInUser.Username }}
         <a class="mdl-navigation__link" href="/auth/account">{{ .SignedInUser.Username }}</a>
         <a class="mdl-navigation__link" href="/auth/signout">Sign out</a>
+        {{ else }}
+        <a class="mdl-navigation__link" href="/auth/login">Sign in</a>
+        {{ end }}
     </nav>
 </div>
 {{ end }}

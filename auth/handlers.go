@@ -22,7 +22,7 @@ type authHandler struct {
 }
 
 type SignedInUser struct {
-	Username string
+	Username   string
 }
 
 type SignedInUserContextKey struct{}

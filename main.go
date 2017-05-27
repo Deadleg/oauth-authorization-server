@@ -9,6 +9,7 @@ import (
 	"github.com/deadleg/oauth-authorization-server/auth"
 	"github.com/deadleg/oauth-authorization-server/oauth"
 	"github.com/deadleg/oauth-authorization-server/users"
+	"github.com/deadleg/oauth-authorization-server/web"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -50,9 +51,10 @@ func main() {
 	n.UseHandler(r)
 
 	server := osin.NewServer(config, storage)
-	oauth.SetupAuthorizationServer(r, server, clientService)
+	oauth.SetupAuthorizationServer(r, server, clientService, oauth.MakeInMemoryCounter())
 	auth.SetupHandlers(r, userService, sessionStore, cookieName)
 	admin.SetupHandlers(r, storage, userService, clientService, sessionStore, cookieName)
+	web.SetupHandlers(r, userService, clientService, sessionStore, cookieName)
 	http.Handle("/", n)
 
 	http.ListenAndServe(":14000", nil)
