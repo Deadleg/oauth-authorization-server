@@ -2,3 +2,8 @@ package: .
 import:
 - package: github.com/gorilla/websocket
   version: ^1.1.0
+- package: github.com/go-redis/redis
+  version: ^6.4.0
+- package: gopkg.in/igm/sockjs-go.v2
+  subpackages:
+  - sockjs

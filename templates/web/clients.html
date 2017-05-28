@@ -12,7 +12,7 @@
                 <div class="page-content">
                     <div class="mdl-grid">
                         <div class="mdl-layout-spacer"></div>
-                        <div class="mdl-cell mdl-cell-6--col">
+                        <div class="mdl-cell mdl-cell-8--col">
                             <button id="show-create-dialog" type="button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent">Create client</button>
                             <dialog id="create-dialog" class="mdl-dialog">
                                 <h4 class="mdl-dialog__title">New client</h4>
@@ -51,7 +51,7 @@
                     </div>
                     <div class="mdl-grid">
                         <div class="mdl-layout-spacer"></div>
-                        <div class="mdl-cell mdl-cell-6--col">
+                        <div class="mdl-cell mdl-cell-8--col">
                             <table class="mdl-data-table mdl-js-data-table full-width">
                                 <thead>
                                     <th class="mdl-data-table__cell--non-numeric">ID</th>
@@ -63,7 +63,7 @@
                                 <tbody>
                                     {{ range $index, $client := .page.Clients }}
                                     <tr>
-                                        <td class="mdl-data-table__cell--non-numeric">{{ $client.Client.ID }}</td>
+                                        <td class="mdl-data-table__cell--non-numeric"><a href="/account/clients/{{ $client.Client.ID }}">{{ $client.Client.ID }}</a></td>
                                         <td class="mdl-data-table__cell--non-numeric">{{ $client.Client.Secret }}</td>
                                         <td class="mdl-data-table__cell--non-numeric">{{ $client.User.Username }}</td>
                                         <td class="mdl-data-table__cell--non-numeric">{{ $client.Client.RateLimitPerSecond }}</td>

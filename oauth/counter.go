@@ -3,11 +3,33 @@ package oauth
 import (
 	"sync"
 	"time"
+
+	"encoding/json"
+
+	"github.com/go-redis/redis"
 )
 
+type WarningEvent struct {
+	Message   string
+	EventType string `json:"type"`
+	Time      time.Time
+}
+
+type EventChannels struct {
+	Warnings chan WarningEvent
+	Requests chan []Event
+}
+
+func MakeEventChannels() *EventChannels {
+	return &EventChannels{
+		Warnings: make(chan WarningEvent),
+		Requests: make(chan []Event),
+	}
+}
+
 type Event struct {
-	ClientID string
-	Time     time.Time
+	ClientID string    `json:"clientID"`
+	Time     time.Time `json:"time"`
 }
 
 type Counter interface {
@@ -24,13 +46,22 @@ type ClientCounter struct {
 type InMemoryCounter struct {
 	sync.Mutex // For counter creation
 	counters   map[string]*ClientCounter
+	redis      *redis.Client
 }
 
-func MakeInMemoryCounter() Counter {
-	return &InMemoryCounter{counters: map[string]*ClientCounter{}}
+func MakeInMemoryCounter(redis *redis.Client) Counter {
+	return &InMemoryCounter{
+		counters: map[string]*ClientCounter{},
+		redis:    redis,
+	}
 }
 
 func (c *InMemoryCounter) Add(e *Event) error {
+	bytes, err := json.Marshal(*e)
+	if err != nil {
+		return err
+	}
+	c.redis.Publish("oauth:"+e.ClientID+":events", string(bytes))
 	counter := c.counters[e.ClientID]
 	if counter == nil {
 		c.Lock()

@@ -6,9 +6,14 @@ import (
 	"net/http"
 	"net/url"
 
+	"gopkg.in/igm/sockjs-go.v2/sockjs"
+
+	"encoding/json"
+
 	"github.com/deadleg/oauth-authorization-server/auth"
 	"github.com/deadleg/oauth-authorization-server/oauth"
 	"github.com/deadleg/oauth-authorization-server/users"
+	"github.com/go-redis/redis"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -22,6 +27,7 @@ type webHandler struct {
 	clients    oauth.ClientService
 	sessions   *sessions.CookieStore
 	cookieName string
+	redis      *redis.Client
 }
 
 const (
@@ -35,12 +41,14 @@ func SetupHandlers(
 	us users.UserService,
 	cs oauth.ClientService,
 	sessionStore *sessions.CookieStore,
-	cookieName string) {
+	cookieName string,
+	redis *redis.Client) {
 	h := &webHandler{
 		users:      us,
 		clients:    cs,
 		sessions:   sessionStore,
 		cookieName: cookieName,
+		redis:      redis,
 	}
 
 	n := negroni.New(negroni.HandlerFunc(h.authMiddleware))
@@ -50,9 +58,12 @@ func SetupHandlers(
 
 	s.Path("/").HandlerFunc(h.indexHandler)
 	s.Methods("GET").Path("/account/clients").HandlerFunc(h.clientsHandler)
+	s.Methods("GET").Path("/account/clients/{ID}").HandlerFunc(h.clientHandler)
 	s.Methods("GET").Path("/account/clients/create").HandlerFunc(h.createClientHandler)
 	s.Methods("POST").Path("/account/clients/delete/{ID}").HandlerFunc(h.deleteClientHandler)
-	s.Path("/ws/account/clients/{ID}").HandlerFunc(h.activityWebsocket)
+
+	socketHandler := sockjs.NewHandler("/ws/account/clients", sockjs.DefaultOptions, h.activityWebsocket)
+	s.PathPrefix("/ws/account/clients").Handler(socketHandler)
 
 	r.PathPrefix("/").Handler(n)
 }
@@ -68,18 +79,49 @@ type ClientsPage struct {
 	SignedInUser auth.SignedInUser
 }
 
+type ClientPage struct {
+	Client       Client
+	Title        string
+	SignedInUser auth.SignedInUser
+}
+
 type IndexPage struct {
 	AppName      string
 	Title        string
 	SignedInUser auth.SignedInUser
 }
 
-func (h webHandler) activityWebsocket(w http.ResponseWriter, r *http.Request) {
-	c, err := upgrader.Upgrade(w, r, nil)
+func (h webHandler) activityWebsocket(session sockjs.Session) {
+	wsMsg, err := session.Recv()
 	if err != nil {
-		log.Error("Failed to open websocket ", err)
+		log.Info(err)
+		return
 	}
-	defer c.Close()
+
+	ids := []string{}
+	log.Info(wsMsg)
+	err = json.Unmarshal([]byte(wsMsg), &ids)
+	if err != nil {
+		log.Info(err)
+		return
+	}
+
+	channels := []string{}
+	for _, id := range ids {
+		channels = append(channels, "oauth:"+id+":events")
+	}
+
+	pubsub := h.redis.Subscribe(channels...)
+	defer pubsub.Close()
+	for {
+		msg, err := pubsub.ReceiveMessage()
+		if err != nil {
+			log.Info(err)
+			break
+		}
+		log.Info(msg.Payload)
+		session.Send(msg.Payload)
+	}
 }
 
 func (h webHandler) indexHandler(w http.ResponseWriter, r *http.Request) {

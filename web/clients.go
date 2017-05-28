@@ -64,3 +64,34 @@ func (h webHandler) clientsHandler(w http.ResponseWriter, r *http.Request) {
 		csrf.TemplateTag: csrf.Token(r),
 	})
 }
+
+func (h webHandler) clientHandler(w http.ResponseWriter, r *http.Request) {
+	cookie, err := h.sessions.Get(r, h.cookieName)
+	if err != nil {
+		http.Error(w, "Not logged in", 403)
+		return
+	}
+	ownerID := cookie.Values["UserId"].(int)
+	vars := mux.Vars(r)
+	client, err := h.clients.GetClient(vars["ID"])
+	if err != nil {
+		log.Error(err.Error())
+		http.Error(w, "Internal error", 500)
+		return
+	}
+
+	user, _ := h.users.GetUserById(ownerID)
+	c := Client{Client: *client, User: *user}
+
+	p := &ClientPage{
+		Client:       c,
+		Title:        "Client",
+		SignedInUser: r.Context().Value(auth.SignedInUserContextKey{}).(auth.SignedInUser),
+	}
+
+	t, err := getTemplate("client.html")
+	t.Execute(w, map[string]interface{}{
+		"page":           p,
+		csrf.TemplateTag: csrf.Token(r),
+	})
+}

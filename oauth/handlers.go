@@ -21,7 +21,11 @@ type OAuthHandler struct {
 }
 
 // SetupAuthorizationServer adds http handlers for the authorization server
-func SetupAuthorizationServer(r *mux.Router, osinServer *osin.Server, clientService ClientService, counter Counter) {
+func SetupAuthorizationServer(
+	r *mux.Router,
+	osinServer *osin.Server,
+	clientService ClientService,
+	counter Counter) {
 	h := OAuthHandler{
 		server:      osinServer,
 		rateLimiter: MakeRateLimiter(clientService),

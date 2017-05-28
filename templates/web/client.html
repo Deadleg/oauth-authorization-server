@@ -1,0 +1,95 @@
+
+<!doctype html>
+<html>
+    <head>
+        <title>Client</title>
+        {{ template "header" }}
+        <script src="https://cdn.jsdelivr.net/sockjs/1/sockjs.min.js"></script>
+    </head>
+    <body>
+        <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+            {{ template "navbar" .page }}
+            <main class="mdl-layout__content">
+                <div class="page-content">
+                    <div class="mdl-grid">
+                        <div class="mdl-layout-spacer"></div>
+                        <div class="mdl-cell mdl-cell-8--col">
+                            <table class="mdl-data-table mdl-js-data-table full-width">
+                                <thead>
+                                    <th class="mdl-data-table__cell--non-numeric">ID</th>
+                                    <th class="mdl-data-table__cell--non-numeric">Secret</th>
+                                    <th class="mdl-data-table__cell--non-numeric">Owner</th>
+                                    <th class="mdl-data-table__cell--non-numeric">Rate limit/s</th>
+                                    <th class="mdl-data-table__cell--non-numeric">Actions </th>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="mdl-data-table__cell--non-numeric">{{ .page.Client.Client.ID }}</a></td>
+                                        <td class="mdl-data-table__cell--non-numeric">{{ .page.Client.Client.Secret }}</td>
+                                        <td class="mdl-data-table__cell--non-numeric">{{ .page.Client.User.Username }}</td>
+                                        <td class="mdl-data-table__cell--non-numeric">{{ .page.Client.Client.RateLimitPerSecond }}</td>
+                                        <td class="mdl-data-table__cell--non-numeric">
+                                            <button id="show-delete-dialog-{{ .page.Client.Client.ID }}" type="button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent">Delete</button>
+                                            <dialog id="delete-dialog-{{ .page.Client.Client.ID }}" class="mdl-dialog">
+                                                <div class="mdl-dialog__content">
+                                                    <p>Are you sure you want to delete {{ .page.Client.Client.ID }}</p>
+                                                    <p id="reload-message-{{ .page.Client.Client.ID }}" style="display: none;">Refreshing clients...</p>
+                                                    <div id="loading-spinner-{{ .page.Client.Client.ID }}" class="mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active" style="display: none;"></div>
+                                                </div>
+                                                <div class="mdl-dialog__actions">
+                                                    <button id="confirm-delete-{{ .page.Client.Client.ID }}" type="button" class="mdl-button close">Delete</button>
+                                                    <button id="close-delete-{{ .page.Client.Client.ID }}" type="button" class="mdl-button close">Cancel</button>
+                                                </div>
+                                            </dialog>
+                                            <script>
+                                                $(function() {
+                                                    var dialog = document.getElementById('delete-dialog-{{ .page.Client.Client.ID }}');
+                                                    var showDialogButton = document.getElementById('show-delete-dialog-{{ .page.Client.Client.ID }}');
+                                                    if (!dialog.showModal) {
+                                                        dialogPolyfill.registerDialog(dialog);
+                                                    }
+
+                                                    showDialogButton.addEventListener('click', function() {
+                                                        dialog.showModal();
+                                                    });
+
+                                                    dialog.querySelector('#confirm-delete-{{ .page.Client.Client.ID }}').addEventListener('click', function() {
+                                                        document.getElementById('loading-spinner-{{ .page.Client.Client.ID }}').style.display = 'block';
+                                                        document.getElementById("reload-message-{{ .page.Client.Client.ID }}").style.display = 'block';
+                                                        $.post("/account/clients/delete/{{ .page.Client.Client.ID }}", {"gorilla.csrf.Token": "{{ $.csrfField }}"}, function(data) {
+                                                            location.reload();
+                                                        });
+                                                    });
+
+                                                    dialog.querySelector('#close-delete-{{ .page.Client.Client.ID }}').addEventListener('click', function() {
+                                                        dialog.close();
+                                                    });
+                                                });
+                                            </script>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mdl-layout-spacer"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <script>
+            var sock = new SockJS('/ws/account/clients/');
+            sock.onopen = function() {
+                sock.send('["{{ .page.Client.Client.ID }}"]')
+                console.log('open');
+            };
+
+            sock.onmessage = function(e) {
+                console.log('message', e.data);
+            };
+
+            sock.onclose = function() {
+                console.log('close');
+            };
+        </script>
+    </body>
+</html>

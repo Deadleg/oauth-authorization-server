@@ -1,6 +1,14 @@
-hash: 5fcc64950b48c5b50bb8a680677f6238c631f8576eacf4e6adcb0db65ae8f084
-updated: 2017-05-27T19:05:21.7562397+12:00
+hash: 74af3e9f11e6463fdc0c3b4f06441abb4301d9d9f49b70f175f71963e57e168a
+updated: 2017-05-28T17:25:47.602907+12:00
 imports:
+- name: github.com/go-redis/redis
+  version: ee42c3d5d3a806afc7763d3993f900b2941f8e35
+  subpackages:
+  - internal
+  - internal/consistenthash
+  - internal/hashtag
+  - internal/pool
+  - internal/proto
 - name: github.com/go-sql-driver/mysql
   version: ae5a66df4d33ba404d639bd0fc9189cd5ee79bcf
 - name: github.com/gorilla/context
@@ -33,4 +41,8 @@ imports:
   version: a55a76086885b80f79961eacb876ebd8caf3868d
   subpackages:
   - unix
+- name: gopkg.in/igm/sockjs-go.v2
+  version: d276e9ffe5cc5c271b81198cc77a2adf6c4482d2
+  subpackages:
+  - sockjs
 testImports: []

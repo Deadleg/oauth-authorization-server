@@ -10,6 +10,7 @@ import (
 	"github.com/deadleg/oauth-authorization-server/oauth"
 	"github.com/deadleg/oauth-authorization-server/users"
 	"github.com/deadleg/oauth-authorization-server/web"
+	"github.com/go-redis/redis"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
@@ -50,11 +51,15 @@ func main() {
 	r := mux.NewRouter()
 	n.UseHandler(r)
 
+	client := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+
 	server := osin.NewServer(config, storage)
-	oauth.SetupAuthorizationServer(r, server, clientService, oauth.MakeInMemoryCounter())
+	oauth.SetupAuthorizationServer(r, server, clientService, oauth.MakeInMemoryCounter(client))
 	auth.SetupHandlers(r, userService, sessionStore, cookieName)
 	admin.SetupHandlers(r, storage, userService, clientService, sessionStore, cookieName)
-	web.SetupHandlers(r, userService, clientService, sessionStore, cookieName)
+	web.SetupHandlers(r, userService, clientService, sessionStore, cookieName, client)
 	http.Handle("/", n)
 
 	http.ListenAndServe(":14000", nil)
