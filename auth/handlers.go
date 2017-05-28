@@ -22,7 +22,7 @@ type authHandler struct {
 }
 
 type SignedInUser struct {
-	Username   string
+	Username string
 }
 
 type SignedInUserContextKey struct{}
@@ -84,7 +84,6 @@ func (ad authHandler) loginPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		http.Redirect(w, r, redirect, http.StatusSeeOther)
 	}
-
 }
 
 func validateRedirect(redirect string, w http.ResponseWriter) {
