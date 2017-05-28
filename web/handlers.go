@@ -10,6 +10,8 @@ import (
 
 	"encoding/json"
 
+	"strings"
+
 	"github.com/deadleg/oauth-authorization-server/auth"
 	"github.com/deadleg/oauth-authorization-server/oauth"
 	"github.com/deadleg/oauth-authorization-server/users"
@@ -91,6 +93,21 @@ type IndexPage struct {
 	SignedInUser auth.SignedInUser
 }
 
+type EventType struct {
+	Type string `json:"type"`
+}
+
+type Event struct {
+	EventType
+	oauth.Event
+}
+
+type Notification struct {
+	EventType
+	Message string `json:"message"`
+	Level   string `json:"level"`
+}
+
 func (h webHandler) activityWebsocket(session sockjs.Session) {
 	wsMsg, err := session.Recv()
 	if err != nil {
@@ -109,6 +126,7 @@ func (h webHandler) activityWebsocket(session sockjs.Session) {
 	channels := []string{}
 	for _, id := range ids {
 		channels = append(channels, "oauth:"+id+":events")
+		channels = append(channels, "oauth:"+id+":info")
 	}
 
 	pubsub := h.redis.Subscribe(channels...)
@@ -120,7 +138,50 @@ func (h webHandler) activityWebsocket(session sockjs.Session) {
 			break
 		}
 		log.Info(msg.Payload)
-		session.Send(msg.Payload)
+		msgBytes := []byte(msg.Payload)
+
+		if strings.Contains(msg.Channel, "event") {
+			event := oauth.Event{}
+
+			err = json.Unmarshal(msgBytes, &event)
+			if err != nil {
+				log.Info(err)
+			}
+
+			e := Event{
+				EventType{
+					Type: "event",
+				},
+				event,
+			}
+
+			resp, err := json.Marshal(e)
+			if err != nil {
+				log.Info(err)
+			}
+
+			session.Send(string(resp))
+		} else if strings.Contains(msg.Channel, "info") {
+			note := Notification{
+				EventType: EventType{
+					Type: "info",
+				},
+				Message: "",
+				Level:   "",
+			}
+
+			err = json.Unmarshal(msgBytes, &note)
+			if err != nil {
+				log.Info(err)
+			}
+
+			resp, err := json.Marshal(note)
+			if err != nil {
+				log.Info(err)
+			}
+
+			session.Send(string(resp))
+		}
 	}
 }
 

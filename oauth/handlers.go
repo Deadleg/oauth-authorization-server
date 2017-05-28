@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/RangelReale/osin"
+	"github.com/go-redis/redis"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 )
@@ -18,6 +19,7 @@ type OAuthHandler struct {
 	server      *osin.Server
 	rateLimiter *RateLimiterPool
 	counter     Counter
+	redis       *redis.Client
 }
 
 // SetupAuthorizationServer adds http handlers for the authorization server
@@ -25,11 +27,13 @@ func SetupAuthorizationServer(
 	r *mux.Router,
 	osinServer *osin.Server,
 	clientService ClientService,
-	counter Counter) {
+	counter Counter,
+	redis *redis.Client) {
 	h := OAuthHandler{
 		server:      osinServer,
 		rateLimiter: MakeRateLimiter(clientService),
 		counter:     counter,
+		redis:       redis,
 	}
 
 	n := negroni.New(negroni.HandlerFunc(h.counterMiddleware), negroni.HandlerFunc(h.rateLimitMiddleware))
@@ -96,6 +100,7 @@ func (h OAuthHandler) rateLimitMiddleware(rw http.ResponseWriter, r *http.Reques
 				Description: "",
 			},
 		})
+		h.redis.Publish("oauth:"+clientID+":info", `{"level":"warning", "message": "You are rate limited."}`)
 		http.Error(rw, string(jsonResponse), 429)
 	} else {
 		next(rw, r)
