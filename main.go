@@ -55,8 +55,10 @@ func main() {
 		Addr: "localhost:6379",
 	})
 
+	alerter := oauth.MakeAlerter(db)
+
 	server := osin.NewServer(config, storage)
-	oauth.SetupAuthorizationServer(r, server, clientService, oauth.MakeInMemoryCounter(client), client)
+	oauth.SetupAuthorizationServer(r, server, clientService, oauth.MakeInMemoryCounter(client), client, alerter)
 	auth.SetupHandlers(r, userService, sessionStore, cookieName)
 	admin.SetupHandlers(r, storage, userService, clientService, sessionStore, cookieName)
 	web.SetupHandlers(r, userService, clientService, sessionStore, cookieName, client)

@@ -104,8 +104,7 @@ type Event struct {
 
 type Notification struct {
 	EventType
-	Message string `json:"message"`
-	Level   string `json:"level"`
+	oauth.Alert
 }
 
 func (h webHandler) activityWebsocket(session sockjs.Session) {
@@ -166,8 +165,6 @@ func (h webHandler) activityWebsocket(session sockjs.Session) {
 				EventType: EventType{
 					Type: "info",
 				},
-				Message: "",
-				Level:   "",
 			}
 
 			err = json.Unmarshal(msgBytes, &note)
