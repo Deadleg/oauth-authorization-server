@@ -10,7 +10,7 @@ import (
 
 	"encoding/json"
 
-	"strings"
+	"strconv"
 
 	"github.com/deadleg/oauth-authorization-server/auth"
 	"github.com/deadleg/oauth-authorization-server/oauth"
@@ -30,6 +30,7 @@ type webHandler struct {
 	sessions   *sessions.CookieStore
 	cookieName string
 	redis      *redis.Client
+	counter    oauth.Counter
 }
 
 const (
@@ -44,13 +45,15 @@ func SetupHandlers(
 	cs oauth.ClientService,
 	sessionStore *sessions.CookieStore,
 	cookieName string,
-	redis *redis.Client) {
+	redis *redis.Client,
+	counter oauth.Counter) {
 	h := &webHandler{
 		users:      us,
 		clients:    cs,
 		sessions:   sessionStore,
 		cookieName: cookieName,
 		redis:      redis,
+		counter:    counter,
 	}
 
 	n := negroni.New(negroni.HandlerFunc(h.authMiddleware))
@@ -61,6 +64,8 @@ func SetupHandlers(
 	s.Path("/").HandlerFunc(h.indexHandler)
 	s.Methods("GET").Path("/account/clients").HandlerFunc(h.clientsHandler)
 	s.Methods("GET").Path("/account/clients/{ID}").HandlerFunc(h.clientHandler)
+	s.Methods("GET").Path("/account/clients/{ID}/eventCounts").HandlerFunc(h.clientEventsCount)
+	s.Methods("GET").Path("/account/clients/{ID}/events").HandlerFunc(h.clientEvents)
 	s.Methods("GET").Path("/account/clients/create").HandlerFunc(h.createClientHandler)
 	s.Methods("POST").Path("/account/clients/delete/{ID}").HandlerFunc(h.deleteClientHandler)
 
@@ -97,14 +102,31 @@ type EventType struct {
 	Type string `json:"type"`
 }
 
-type Event struct {
-	EventType
-	oauth.Event
-}
-
 type Notification struct {
 	EventType
 	oauth.Alert
+}
+
+func (h webHandler) clientEvents(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	data := h.counter.GetEvents(vars["ID"])
+	json.NewEncoder(w).Encode(data)
+}
+
+func (h webHandler) clientEventsCount(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	jsonData := []map[string]interface{}{}
+	data := h.redis.HGetAll("event:" + vars["ID"] + ":1:count")
+	for k, v := range data.Val() {
+		i, _ := strconv.Atoi(v)
+		jsonData = append(jsonData, map[string]interface{}{
+			"timestamp": k,
+			"value":     i,
+		})
+	}
+
+	json.NewEncoder(w).Encode(jsonData)
 }
 
 func (h webHandler) activityWebsocket(session sockjs.Session) {
@@ -124,7 +146,6 @@ func (h webHandler) activityWebsocket(session sockjs.Session) {
 
 	channels := []string{}
 	for _, id := range ids {
-		channels = append(channels, "oauth:"+id+":events")
 		channels = append(channels, "oauth:"+id+":info")
 	}
 
@@ -139,46 +160,23 @@ func (h webHandler) activityWebsocket(session sockjs.Session) {
 		log.Info(msg.Payload)
 		msgBytes := []byte(msg.Payload)
 
-		if strings.Contains(msg.Channel, "event") {
-			event := oauth.Event{}
-
-			err = json.Unmarshal(msgBytes, &event)
-			if err != nil {
-				log.Info(err)
-			}
-
-			e := Event{
-				EventType{
-					Type: "event",
-				},
-				event,
-			}
-
-			resp, err := json.Marshal(e)
-			if err != nil {
-				log.Info(err)
-			}
-
-			session.Send(string(resp))
-		} else if strings.Contains(msg.Channel, "info") {
-			note := Notification{
-				EventType: EventType{
-					Type: "info",
-				},
-			}
-
-			err = json.Unmarshal(msgBytes, &note)
-			if err != nil {
-				log.Info(err)
-			}
-
-			resp, err := json.Marshal(note)
-			if err != nil {
-				log.Info(err)
-			}
-
-			session.Send(string(resp))
+		note := Notification{
+			EventType: EventType{
+				Type: "info",
+			},
 		}
+
+		err = json.Unmarshal(msgBytes, &note)
+		if err != nil {
+			log.Info(err)
+		}
+
+		resp, err := json.Marshal(note)
+		if err != nil {
+			log.Info(err)
+		}
+
+		session.Send(string(resp))
 	}
 }
 

@@ -1,12 +1,13 @@
 package oauth
 
 import (
+	"encoding/json"
+	"strconv"
 	"sync"
 	"time"
 
-	"encoding/json"
-
 	"github.com/go-redis/redis"
+	log "github.com/sirupsen/logrus"
 )
 
 type WarningEvent struct {
@@ -43,6 +44,8 @@ type ClientCounter struct {
 	events *[]Event
 }
 
+// InMemoryCounter stores all events in memory with additional
+// counting in redis.
 type InMemoryCounter struct {
 	sync.Mutex // For counter creation
 	counters   map[string]*ClientCounter
@@ -57,29 +60,38 @@ func MakeInMemoryCounter(redis *redis.Client) Counter {
 }
 
 func (c *InMemoryCounter) Add(e *Event) error {
-	bytes, err := json.Marshal(*e)
+	key := "event:" + e.ClientID + ":1:count"
+	hkey := strconv.FormatInt((time.Now().Unix()/60)*60, 10)
+
+	c.redis.HIncrBy(key, hkey, 1)
+	c.redis.ZAdd("counters:"+e.ClientID+":1", redis.Z{Member: hkey, Score: 0})
+
+	eventJSONBytes, err := json.Marshal(*e)
 	if err != nil {
-		return err
+		return nil
 	}
-	c.redis.Publish("oauth:"+e.ClientID+":events", string(bytes))
-	counter := c.counters[e.ClientID]
-	if counter == nil {
-		c.Lock()
-		if c.counters[e.ClientID] == nil {
-			counter = &ClientCounter{events: &[]Event{}}
-			c.counters[e.ClientID] = counter
-		}
-		c.Unlock()
-	}
-	counter.Lock()
-	defer counter.Unlock()
-	newEvents := append(*counter.events, *e)
-	counter.events = &newEvents
-	return nil
+
+	lastKey := "last:100:" + e.ClientID
+	pipe := c.redis.Pipeline()
+	pipe.LPush(lastKey, string(eventJSONBytes))
+	pipe.LTrim(lastKey, 0, 100)
+	_, err = pipe.Exec()
+	return err
 }
 
 func (c *InMemoryCounter) GetEvents(clientID string) []Event {
-	return *c.counters[clientID].events
+	list := c.redis.LRange("last:100:"+clientID, 0, -1)
+	data := []Event{}
+	for _, v := range list.Val() {
+		e := Event{}
+		err := json.Unmarshal([]byte(v), &e)
+		if err != nil {
+			log.Info(err)
+		}
+		data = append(data, e)
+	}
+	return data
+	//return *c.counters[clientID].events
 }
 
 func (c *InMemoryCounter) GetEventsFrom(clientID string, last time.Time) []Event {
