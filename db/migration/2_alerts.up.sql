@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS alert_types (
 	message VARCHAR(512) NOT NULL
 );
 
-INSERT INTO alert_type 
+INSERT INTO alert_types 
 	(title, message) 
 VALUES 
 	('Ratelimit hit', 'You have hit your rate limit of %v requests per minute.');
