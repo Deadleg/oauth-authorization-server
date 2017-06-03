@@ -9,7 +9,12 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
         <style>
             .chart rect {
-                fill: steelblue;
+                fill: rgb(33,150,243);
+            }
+
+            .chart .axis .label {
+                fill: black;
+                font-size: large;
             }
         </style>
     </head>
@@ -105,7 +110,7 @@
                 console.log('close');
             };
 
-            var margin = {top: 20, bottom: 20, left: 30, right: 20};
+            var margin = {top: 20, bottom: 50, left: 60, right: 20};
             var barWidth = 30;
             var graphWidth = barWidth * 20;
             var chartWidth = graphWidth + margin.left + margin.right;
@@ -146,12 +151,24 @@
 
                 chart.append("g")
                         .attr("class", "y axis")
-                        .call(yAxis);
+                        .call(yAxis)
+                        .append("text")
+                        .attr("transform", "rotate(-90) translate(-" + maxBarHeight/2 + ", -40)")
+                        .style("text-anchor", "middle")
+                        .attr("class", "label")
+                        .text("Number of requests");
 
                 chart.append("g")
+                        .attr("class", "x axis")
                         .attr("transform", "translate(0," +  (maxBarHeight) + ")")
-                        .call(xAxis);
+                        .call(xAxis)
+                        .append("text")
+                        .attr("transform", "translate(" + graphWidth/2 + ", 40)")
+                        .style("text-anchor", "middle")
+                        .attr("class", "label")
+                        .text("Date");
 
+                var color;
                 var bar = chart.selectAll('rect')
                         .data(data)
                         .enter().append('rect')
@@ -164,7 +181,17 @@
                         .attr('width', x.bandwidth())
                         .attr('height', function(d) {
                             return maxBarHeight - y(d.value); 
+                        })
+                        .on('mouseover', function(data) {
+                            color = this.style.fill;
+                            d3.select(this)
+                                .style('fill', '#f37e21')
+                        })
+                        .on('mouseout', function(data) {
+                            d3.select(this)
+                                .style('fill', color)
                         });
+
                 
                 bar.append("text")
                         .attr("x", 0)
