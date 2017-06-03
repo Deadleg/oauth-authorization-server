@@ -5,12 +5,15 @@ import (
 	"html/template"
 	"net/http"
 	"net/url"
+	"sort"
 
 	"gopkg.in/igm/sockjs-go.v2/sockjs"
 
 	"encoding/json"
 
 	"strconv"
+
+	"math"
 
 	"github.com/deadleg/oauth-authorization-server/auth"
 	"github.com/deadleg/oauth-authorization-server/oauth"
@@ -118,15 +121,51 @@ func (h webHandler) clientEventsCount(w http.ResponseWriter, r *http.Request) {
 
 	jsonData := []map[string]interface{}{}
 	data := h.redis.HGetAll("event:" + vars["ID"] + ":1:count")
+	keys := []int{}
+
 	for k, v := range data.Val() {
+		t, _ := strconv.Atoi(k)
 		i, _ := strconv.Atoi(v)
 		jsonData = append(jsonData, map[string]interface{}{
-			"timestamp": k,
+			"timestamp": t,
 			"value":     i,
 		})
+		keys = append(keys, t)
 	}
 
-	json.NewEncoder(w).Encode(jsonData)
+	sort.Sort(sort.Reverse(sort.IntSlice(keys)))
+	keys = keys[0:int(math.Min(10, float64(len(keys))))]
+	for i := 0; i < 10; i++ {
+		for j := 1; i+j < 10; j++ {
+			if keys[i+1] != keys[i]-(j*60) {
+				log.Info(i, j, len(keys))
+				keys = append(keys, keys[i]-(j*60))
+				sort.Sort(sort.Reverse(sort.IntSlice(keys)))
+				keys = keys[0:int(math.Min(10, float64(len(keys))))]
+				break
+			}
+		}
+	}
+
+	realJSONData := []map[string]interface{}{}
+	for _, timestamp := range keys {
+		var d map[string]interface{}
+		for _, v := range jsonData {
+			if v["timestamp"] == timestamp {
+				d = v
+			}
+		}
+		if d == nil {
+			realJSONData = append(realJSONData, map[string]interface{}{
+				"timestamp": timestamp,
+				"value":     0,
+			})
+		} else {
+			realJSONData = append(realJSONData, d)
+		}
+	}
+
+	json.NewEncoder(w).Encode(realJSONData)
 }
 
 func (h webHandler) activityWebsocket(session sockjs.Session) {
