@@ -119,59 +119,66 @@
             var barTopText = 20;
             var chartHeight = maxBarHeight + xLabelHeight + barTopText + margin.top + margin.bottom;
 
+            var y = d3.scaleLinear()
+                    .range([maxBarHeight, 0]);
+
+            var x = d3.scaleBand()
+                .range([0, graphWidth])
+                .round(true)
+                .padding(0.1);
+
+            var chart = d3.select(".chart")
+                    .attr('width', chartWidth)
+                    .attr('height', chartHeight)
+                    .append('g')
+                    .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
+
+            var yAxis = d3.axisLeft(y);
+
+            var xAxis = d3.axisBottom(x);
+            xAxis.tickFormat(d => { 
+                return moment.unix(d).format('MM-DD H:mm'); 
+            })
+
+            chart.append("g")
+                    .attr("class", "y axis")
+                    .call(yAxis)
+                    .append("text")
+                    .attr("transform", "rotate(-90) translate(-" + maxBarHeight/2 + ", -40)")
+                    .style("text-anchor", "middle")
+                    .attr("class", "label")
+                    .text("Number of requests");
+
+            chart.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0," +  (maxBarHeight) + ")")
+                    .call(xAxis)
+                    .append("text")
+                    .attr("transform", "translate(" + graphWidth/2 + ", 40)")
+                    .style("text-anchor", "middle")
+                    .attr("class", "label")
+                    .text("Date");
+
             function updateGraph(data) {
                 data.sort(function(a,b) {
                     return a.timestamp - b.timestamp
                 })
 
-                var y = d3.scaleLinear()
-                        .domain([0, d3.max(data, function(d) { 
-                            return d.value;
-                        })])
-                        .range([maxBarHeight, 0]);
-
-                var x = d3.scaleBand()
-                    .range([0, graphWidth])
-                    .round(true)
-                    .padding(0.1)
-                    .domain(data.map(d => { return d.timestamp }));
-
-                var chart = d3.select(".chart")
-                        .attr('width', chartWidth)
-                        .attr('height', chartHeight)
-                        .append('g')
-                        .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
-
-                var yAxis = d3.axisLeft(y);
-
-                var xAxis = d3.axisBottom(x);
-                xAxis.tickFormat(d => { 
-                    return moment.unix(d).format('MM-DD H:mm'); 
-                })
-
-                chart.append("g")
-                        .attr("class", "y axis")
-                        .call(yAxis)
-                        .append("text")
-                        .attr("transform", "rotate(-90) translate(-" + maxBarHeight/2 + ", -40)")
-                        .style("text-anchor", "middle")
-                        .attr("class", "label")
-                        .text("Number of requests");
-
-                chart.append("g")
-                        .attr("class", "x axis")
-                        .attr("transform", "translate(0," +  (maxBarHeight) + ")")
-                        .call(xAxis)
-                        .append("text")
-                        .attr("transform", "translate(" + graphWidth/2 + ", 40)")
-                        .style("text-anchor", "middle")
-                        .attr("class", "label")
-                        .text("Date");
+                x.domain(data.map(d => { return d.timestamp }));
+                y.domain([0, d3.max(data, function(d) { 
+                        return d.value;
+                })])
+                chart.selectAll(".y.axis")
+                    .call(yAxis);
+                chart.selectAll(".x.axis")
+                    .call(xAxis);
 
                 var color;
                 var bar = chart.selectAll('rect')
-                        .data(data)
-                        .enter().append('rect')
+                        .remove()
+                        .exit()
+                        .data(data);
+                bar.enter().append('rect')
                         .attr('y', function(d) { 
                             return y(d.value); 
                         })
@@ -190,20 +197,10 @@
                         .on('mouseout', function(data) {
                             d3.select(this)
                                 .style('fill', color)
-                        });
+                        })
+                        .merge(bar);
 
-                
-                bar.append("text")
-                        .attr("x", 0)
-                        .attr("y", function(d) { return y(d.value) + 20})
-                        .attr("dy", ".35em")
-                        .text(function(d) { return d.timestamp; });
-
-                bar.append("text")
-                        .attr("x", barWidth/4)
-                        .attr("y", -10)
-                        .attr("dy", ".35em")
-                        .text(function(d) { return d.value; });
+                    bar.exit().remove();
             }
 
             function updateEventCounts() {
@@ -212,11 +209,9 @@
                     console.log(d);
                     updateGraph(d)
                 })
-                /*
                 .always(function() {
                     setTimeout(updateEventCounts, 5000);
                 });
-                */
             };
 
             function updateEvents() {
