@@ -16,6 +16,20 @@
                 fill: black;
                 font-size: large;
             }
+
+            .svg-container {
+                display: inline-block;
+                position: relative;
+                width: calc(66.6666666667% - 36px); /* from matrial class */
+                margin: 8px;
+                padding-bottom: 100%; /* aspect ratio */
+                vertical-align: top;
+                overflow: hidden;
+            }
+            .svg-content-responsive {
+                display: inline-block;
+                position: absolute;
+            }
         </style>
     </head>
     <body>
@@ -24,8 +38,8 @@
             <main class="mdl-layout__content">
                 <div class="page-content">
                     <div class="mdl-grid">
-                        <div class="mdl-layout-spacer"></div>
-                        <div class="mdl-cell mdl-cell-8--col">
+                        <div class="mdl-cell mdl-cell--2-col"></div>
+                        <div class="mdl-cell mdl-cell--8-col">
                             <table class="mdl-data-table mdl-js-data-table full-width">
                                 <thead>
                                     <th class="mdl-data-table__cell--non-numeric">ID</th>
@@ -83,11 +97,10 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="mdl-layout-spacer"></div>
                     </div>
                     <div class="mdl-grid">
                         <div class="mdl-layout-spacer"></div>
-                        <div class="mdl-cell mdl-cell-8--col">
+                        <div class="mdl-cell mdl-cell--8-col">
                             <svg class="chart"></svg>
                         </div>
                         <div class="mdl-layout-spacer"></div>
@@ -110,9 +123,10 @@
                 console.log('close');
             };
 
-            var margin = {top: 20, bottom: 50, left: 60, right: 20};
-            var barWidth = 30;
-            var graphWidth = barWidth * 20;
+            var currentData = [];
+
+            var margin = {top: 20, bottom: 50, left: 60, right: 0};
+            var graphWidth = $('.mdl-cell.mdl-cell--8-col').width() - margin.left - margin.right;
             var chartWidth = graphWidth + margin.left + margin.right;
             var xLabelHeight = 40;
             var maxBarHeight = 500;
@@ -128,8 +142,12 @@
                 .padding(0.1);
 
             var chart = d3.select(".chart")
-                    .attr('width', chartWidth)
                     .attr('height', chartHeight)
+                    .classed("svg-container", true) //container class to make it responsive
+                    .attr("preserveAspectRatio", "xMinYMin meet")
+                    .attr("viewBox", "0 0 " + chartWidth+ " " + chartHeight)
+                    //class to make it responsive
+                    .classed("svg-content-responsive", true)
                     .append('g')
                     .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
 
@@ -151,7 +169,7 @@
 
             chart.append("g")
                     .attr("class", "x axis")
-                    .attr("transform", "translate(0," +  (maxBarHeight) + ")")
+                    .attr("transform", "translate(0," + maxBarHeight + ")")
                     .call(xAxis)
                     .append("text")
                     .attr("transform", "translate(" + graphWidth/2 + ", 40)")
@@ -167,17 +185,32 @@
                 x.domain(data.map(d => { return d.timestamp }));
                 y.domain([0, d3.max(data, function(d) { 
                         return d.value;
-                })])
+                })]);
+
                 chart.selectAll(".y.axis")
+                    .transition().duration(300)
                     .call(yAxis);
                 chart.selectAll(".x.axis")
+                    .transition().duration(300)
                     .call(xAxis);
 
                 var color;
                 var bar = chart.selectAll('rect')
-                        .remove()
-                        .exit()
                         .data(data);
+
+                bar.exit()
+                        .transition()
+                        .duration(300)
+                        .attr("y", y(0))
+                        .attr("height", maxBarHeight - y(0))
+                        .style('fill-opacity', 1e-6)
+                        .remove();
+
+                bar.transition().duration(300).attr("x", function(d) { return x(d.timestamp); }) // (d) is one item from the data array, x is the scale object from above
+                        .attr("width", x.bandwidth()) // constant, so no callback function(d) here
+                        .attr("y", function(d) { return y(d.value); })
+                        .attr("height", function(d) { return maxBarHeight - y(d.value); }); // flip the height, because y's domain is bottom up, but SVG renders top down
+
                 bar.enter().append('rect')
                         .attr('y', function(d) { 
                             return y(d.value); 
@@ -197,17 +230,16 @@
                         .on('mouseout', function(data) {
                             d3.select(this)
                                 .style('fill', color)
-                        })
-                        .merge(bar);
-
-                    bar.exit().remove();
+                        });
+                        //.merge(bar);
             }
 
             function updateEventCounts() {
                 $.getJSON("/account/clients/{{ .page.Client.Client.ID }}/eventCounts")
                 .done(function(d) {
                     console.log(d);
-                    updateGraph(d)
+                    currentData = d;
+                    updateGraph(d);
                 })
                 .always(function() {
                     setTimeout(updateEventCounts, 5000);
@@ -223,6 +255,18 @@
 
             updateEventCounts();
             updateEvents();
+
+            function redraw() {
+                graphWidth = $('.mdl-cell.mdl-cell--8-col').width() - margin.left - margin.right;
+                chartWidth = graphWidth + margin.left + margin.right;
+                x.range([1, graphWidth]);
+                d3.select(".chart")
+                    .attr("viewBox", "0 0 " + chartWidth + " " + chartHeight)
+
+                //updateEventCounts(currentData);
+            }
+
+            //window.addEventListener("resize", redraw);
         </script>
     </body>
 </html>

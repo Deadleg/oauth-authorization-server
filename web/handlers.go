@@ -138,10 +138,11 @@ func (h webHandler) clientEventsCount(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < 10; i++ {
 		for j := 1; i+j < 10; j++ {
 			if keys[i+1] != keys[i]-(j*60) {
-				log.Info(i, j, len(keys))
 				keys = append(keys, keys[i]-(j*60))
 				sort.Sort(sort.Reverse(sort.IntSlice(keys)))
 				keys = keys[0:int(math.Min(10, float64(len(keys))))]
+				break
+			} else {
 				break
 			}
 		}
