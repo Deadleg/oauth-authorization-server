@@ -99,6 +99,21 @@
                         </div>
                     </div>
                     <div class="mdl-grid">
+                        <div class="mdl-cell mdl-cell--2-col"></div>
+                        <div class="mdl-cell mdl-cell--8-col">
+                            <table class="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp">
+                                <thead>
+                                    <tr>
+                                        <td colspan="3">Alerts</td>
+                                    </tr>
+                                </thead>
+                                <tbody id="alert-body">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="mdl-grid">
                         <div class="mdl-layout-spacer"></div>
                         <div class="mdl-cell mdl-cell--8-col">
                             <svg class="chart"></svg>
@@ -116,7 +131,15 @@
             };
 
             sock.onmessage = function(e) {
-                console.log('message', e.data);
+                console.log(e.data);
+                var json = JSON.parse(e.data);
+                $('#alert-body').append("<tr><td>" + 
+                    moment.unix(json.timestamp).format() + 
+                    "</td><td>" + 
+                    json.title + 
+                    "</td><td>" + 
+                    json.message + 
+                    "</td></tr>");
             };
 
             sock.onclose = function() {

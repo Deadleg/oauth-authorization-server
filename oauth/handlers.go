@@ -111,9 +111,10 @@ func (h OAuthHandler) rateLimitMiddleware(rw http.ResponseWriter, r *http.Reques
 			log.Info(err)
 		} else {
 			alert := Alert{
-				ID:      id,
-				Title:   rateLimitHit,
-				Message: fmt.Sprintf(message, result.Limit),
+				ID:        id,
+				Title:     rateLimitHit,
+				Message:   fmt.Sprintf(message, result.Limit),
+				Timestamp: time.Now().Unix(),
 			}
 			bytes, err := json.Marshal(alert)
 			if err != nil {

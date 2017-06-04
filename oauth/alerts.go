@@ -7,9 +7,10 @@ type Alerter struct {
 }
 
 type Alert struct {
-	ID      int64  `json:"id"`
-	Title   string `json:"title"`
-	Message string `json:"message"`
+	ID        int64  `json:"id"`
+	Title     string `json:"title"`
+	Message   string `json:"message"`
+	Timestamp int64  `json:"timestamp"`
 }
 
 const rateLimitHit = "Ratelimit hit"
