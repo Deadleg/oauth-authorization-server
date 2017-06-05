@@ -63,7 +63,7 @@ func main() {
 	oauth.SetupAuthorizationServer(r, server, clientService, counter, client, alerter)
 	auth.SetupHandlers(r, userService, sessionStore, cookieName)
 	admin.SetupHandlers(r, storage, userService, clientService, sessionStore, cookieName)
-	web.SetupHandlers(r, userService, clientService, sessionStore, cookieName, client, counter)
+	web.SetupHandlers(r, userService, clientService, sessionStore, cookieName, client, counter, alerter)
 	http.Handle("/", n)
 
 	http.ListenAndServe(":14000", nil)

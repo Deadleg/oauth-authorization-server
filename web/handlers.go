@@ -34,6 +34,7 @@ type webHandler struct {
 	cookieName string
 	redis      *redis.Client
 	counter    oauth.Counter
+	alerter    *oauth.Alerter
 }
 
 const (
@@ -49,7 +50,8 @@ func SetupHandlers(
 	sessionStore *sessions.CookieStore,
 	cookieName string,
 	redis *redis.Client,
-	counter oauth.Counter) {
+	counter oauth.Counter,
+	alerter *oauth.Alerter) {
 	h := &webHandler{
 		users:      us,
 		clients:    cs,
@@ -57,6 +59,7 @@ func SetupHandlers(
 		cookieName: cookieName,
 		redis:      redis,
 		counter:    counter,
+		alerter:    alerter,
 	}
 
 	n := negroni.New(negroni.HandlerFunc(h.authMiddleware))
@@ -191,6 +194,33 @@ func (h webHandler) activityWebsocket(session sockjs.Session) {
 
 	pubsub := h.redis.Subscribe(channels...)
 	defer pubsub.Close()
+
+	for _, id := range ids {
+		alerts, err := h.alerter.GetAlerts(id)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+
+		mappedAlerts := []Notification{}
+		for _, alert := range alerts {
+			mappedAlerts = append(mappedAlerts, Notification{
+				EventType{
+					Type: "info",
+				},
+				alert,
+			})
+		}
+
+		resp, err := json.Marshal(mappedAlerts)
+		if err != nil {
+			log.Info(err)
+			continue
+		}
+
+		session.Send(string(resp))
+	}
+
 	for {
 		msg, err := pubsub.ReceiveMessage()
 		if err != nil {
@@ -200,9 +230,11 @@ func (h webHandler) activityWebsocket(session sockjs.Session) {
 		log.Info(msg.Payload)
 		msgBytes := []byte(msg.Payload)
 
-		note := Notification{
-			EventType: EventType{
-				Type: "info",
+		note := []Notification{
+			Notification{
+				EventType: EventType{
+					Type: "info",
+				},
 			},
 		}
 

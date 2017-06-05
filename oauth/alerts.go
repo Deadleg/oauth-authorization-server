@@ -1,22 +1,29 @@
 package oauth
 
 import "github.com/jmoiron/sqlx"
+import "fmt"
 
 type Alerter struct {
 	db *sqlx.DB
 }
 
 type Alert struct {
-	ID        int64  `json:"id"`
-	Title     string `json:"title"`
-	Message   string `json:"message"`
-	Timestamp int64  `json:"timestamp"`
+	ID                 int64  `json:"id"`
+	Client             string `json:"client"`
+	Title              string `json:"title"`
+	Message            string `json:"message"`
+	Timestamp          int64  `json:"timestamp"`
+	RateLimitPerSecond int    `json:"-" db:"rate_limit_per_second"`
 }
 
 const rateLimitHit = "Ratelimit hit"
 
 func MakeAlerter(db *sqlx.DB) *Alerter {
 	return &Alerter{db: db}
+}
+
+func (a *Alert) message(template string, vars ...interface{}) {
+	a.Message = fmt.Sprintf(template, vars...)
 }
 
 func (a *Alerter) createAlert(client string, title string) (int64, string, error) {
@@ -43,4 +50,41 @@ func (a *Alerter) createAlert(client string, title string) (int64, string, error
 	}
 
 	return id, message, nil
+}
+
+func (a *Alerter) GetAlerts(client string) ([]Alert, error) {
+	alerts := []*Alert{}
+
+	err := a.db.Select(
+		&alerts,
+		`SELECT 
+			a.id AS id, 
+			UNIX_TIMESTAMP(a.time) AS timestamp,
+			a.client AS client, 
+			at.title AS title, 
+			at.message AS message,
+			c.rate_limit_per_second AS rate_limit_per_second
+		FROM alerts a 
+		INNER JOIN alert_types at
+			ON a.alert_type=at.id
+		INNER JOIN clients c 
+			ON c.id=a.client
+		WHERE client=? 
+		LIMIT 5`,
+		client)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Need to update message from template
+	values := []Alert{}
+	for _, a := range alerts {
+		if a.Title == "Ratelimit hit" {
+			a.message(a.Message, a.RateLimitPerSecond)
+		}
+		values = append(values, *a)
+	}
+
+	return values, nil
 }
