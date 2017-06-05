@@ -32,9 +32,22 @@
                 vertical-align: top;
                 overflow: hidden;
             }
+
             .svg-content-responsive {
                 display: inline-block;
                 position: absolute;
+            }
+
+            .mdl-card.header {
+                min-height: 0;
+            }
+
+            .mdl-card.header .mdl-card__title {
+                border-bottom: 1px lightgray solid;
+            }
+
+            .danger {
+                background-color: #ff8b80;
             }
         </style>
     </head>
@@ -46,21 +59,63 @@
                     <div class="mdl-grid">
                         <div class="mdl-cell mdl-cell--2-col"></div>
                         <div class="mdl-cell mdl-cell--8-col">
+                            <div class="mdl-card full-width header">
+                                <div class="mdl-card__title">
+                                    <h1 class="mdl-card__title-text">Client</h1>
+                                    <hri/>
+                                </div>
+                                <div>
+                                    <div class="mdl-grid">
+                                        <div class="mdl-cell mdl-cell--4-col">
+                                            <strong>ID: </strong><span>{{ .page.Client.Client.ID }}</span>
+                                        </div>
+                                        <div class="mdl-cell mdl-cell--4-col">
+                                            <strong>Secret: </strong><span>{{ .page.Client.Client.Secret }}</span>
+                                        </div>
+                                        <div class="mdl-cell mdl-cell--4-col">
+                                            <strong>Rate limit: </strong><span>{{ .page.Client.Client.RateLimitPerSecond }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mdl-grid">
+                        <div class="mdl-cell mdl-cell--2-col"></div>
+                        <div class="mdl-cell mdl-cell--8-col">
                             <table class="mdl-data-table mdl-js-data-table full-width">
                                 <thead>
-                                    <th class="mdl-data-table__cell--non-numeric">ID</th>
-                                    <th class="mdl-data-table__cell--non-numeric">Secret</th>
-                                    <th class="mdl-data-table__cell--non-numeric">Owner</th>
-                                    <th class="mdl-data-table__cell--non-numeric">Rate limit/s</th>
-                                    <th class="mdl-data-table__cell--non-numeric">Actions </th>
-                                </thead>
-                                <tbody>
                                     <tr>
-                                        <td class="mdl-data-table__cell--non-numeric">{{ .page.Client.Client.ID }}</a></td>
-                                        <td class="mdl-data-table__cell--non-numeric">{{ .page.Client.Client.Secret }}</td>
-                                        <td class="mdl-data-table__cell--non-numeric">{{ .page.Client.User.Username }}</td>
-                                        <td class="mdl-data-table__cell--non-numeric">{{ .page.Client.Client.RateLimitPerSecond }}</td>
-                                        <td class="mdl-data-table__cell--non-numeric">
+                                        <th class="mdl-data-table__cell--non-numeric" colspan="3">Alerts</td>
+                                    </tr>
+                                </thead>
+                                <tbody id="alert-body">
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="mdl-grid">
+                        <div class="mdl-layout-spacer"></div>
+                        <div id="chart-container" class="mdl-cell mdl-cell--8-col">
+                            <svg class="chart"></svg>
+                        </div>
+                        <div class="mdl-layout-spacer"></div>
+                    </div>
+                    <div class="mdl-grid">
+                        <div class="mdl-cell mdl-cell--2-col"></div>
+                        <div class="mdl-cell mdl-cell--8-col">
+                            <div class="mdl-card full-width header">
+                                <div class="mdl-card__title danger">
+                                    <h1 class="mdl-card__title-text">Danger area</h1>
+                                    <hri/>
+                                </div>
+                                <div>
+                                    <div class="mdl-grid">
+                                        <div class="mdl-cell mdl-cell--8-col"> 
+                                            Delete this client (can't be undone)
+                                        </div>
+                                        <div class="mdl-cell mdl-cell--2-col">
                                             <button id="show-delete-dialog-{{ .page.Client.Client.ID }}" type="button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent">Delete</button>
                                             <dialog id="delete-dialog-{{ .page.Client.Client.ID }}" class="mdl-dialog">
                                                 <div class="mdl-dialog__content">
@@ -98,33 +153,11 @@
                                                     });
                                                 });
                                             </script>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="mdl-grid">
-                        <div class="mdl-cell mdl-cell--2-col"></div>
-                        <div class="mdl-cell mdl-cell--8-col">
-                            <table class="mdl-data-table mdl-js-data-table">
-                                <thead>
-                                    <tr>
-                                        <th class="mdl-data-table__cell--non-numeric" colspan="3">Alerts</td>
-                                    </tr>
-                                </thead>
-                                <tbody id="alert-body">
-
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="mdl-grid">
-                        <div class="mdl-layout-spacer"></div>
-                        <div class="mdl-cell mdl-cell--8-col">
-                            <svg class="chart"></svg>
-                        </div>
-                        <div class="mdl-layout-spacer"></div>
                     </div>
                 </div>
             </main>
@@ -182,10 +215,10 @@
 
             var chart = d3.select(".chart")
                     .attr('height', chartHeight)
-                    .classed("svg-container", true) //container class to make it responsive
+                    .classed("svg-container", true) // container class to make it responsive
                     .attr("preserveAspectRatio", "xMinYMin meet")
                     .attr("viewBox", "0 0 " + chartWidth+ " " + chartHeight)
-                    //class to make it responsive
+                    // class to make it responsive
                     .classed("svg-content-responsive", true)
                     .append('g')
                     .attr('transform', 'translate(' + margin.left + ', ' + margin.top + ')');
@@ -270,7 +303,6 @@
                             d3.select(this)
                                 .style('fill', color)
                         });
-                        //.merge(bar);
             }
 
             function updateEventCounts() {
@@ -292,6 +324,11 @@
                 });
             }
 
+            function updateChartContainer() {
+                $('#chart-container').height(chartHeight);
+            }
+
+            updateChartContainer();
             updateEventCounts();
             updateEvents();
 
@@ -302,10 +339,7 @@
                 d3.select(".chart")
                     .attr("viewBox", "0 0 " + chartWidth + " " + chartHeight)
 
-                //updateEventCounts(currentData);
             }
-
-            //window.addEventListener("resize", redraw);
         </script>
     </body>
 </html>
