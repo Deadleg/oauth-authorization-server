@@ -26,7 +26,21 @@ func (a *Alert) message(template string, vars ...interface{}) {
 	a.Message = fmt.Sprintf(template, vars...)
 }
 
-func (a *Alerter) createAlert(client string, title string) (int64, string, error) {
+func (a *Alerter) isAlerting(client string, title string) (bool, error) {
+	exists := false
+	err := a.db.Get(&exists,
+		`SELECT EXISTS(*) 
+		FROM alerts WHERE title=?
+		GROUP BY time > date_sub(now(), interval 5 min)`,
+		title)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
+func (a *Alerter) createAlert(client string, title string) (int64, string, bool, error) {
 	result, err := a.db.NamedExec(
 		`INSERT INTO alerts (client, alert_type) 
 		VALUES (:client, (SELECT id FROM alert_types WHERE title=:title))`,
@@ -35,21 +49,21 @@ func (a *Alerter) createAlert(client string, title string) (int64, string, error
 			"title":  title,
 		})
 	if err != nil {
-		return 0, "", err
+		return 0, "", false, err
 	}
 
 	message := ""
 	err = a.db.Get(&message, `SELECT message FROM alert_types WHERE title=?`, title)
 	if err != nil {
-		return 0, "", err
+		return 0, "", false, err
 	}
 
 	id, err := result.LastInsertId()
 	if err != nil {
-		return 0, "", err
+		return 0, "", false, err
 	}
 
-	return id, message, nil
+	return id, message, false, nil
 }
 
 func (a *Alerter) GetAlerts(client string) ([]Alert, error) {
@@ -57,9 +71,9 @@ func (a *Alerter) GetAlerts(client string) ([]Alert, error) {
 
 	err := a.db.Select(
 		&alerts,
-		`SELECT 
-			a.id AS id, 
+		`SELECT
 			UNIX_TIMESTAMP(a.time) AS timestamp,
+			a.id AS id, 
 			a.client AS client, 
 			at.title AS title, 
 			at.message AS message,
@@ -69,7 +83,9 @@ func (a *Alerter) GetAlerts(client string) ([]Alert, error) {
 			ON a.alert_type=at.id
 		INNER JOIN clients c 
 			ON c.id=a.client
-		WHERE client=? 
+		WHERE a.id in (
+			SELECT max(id) FROM alerts WHERE client='id' GROUP BY UNIX_TIMESTAMP(time) DIV 60
+        )
 		LIMIT 5`,
 		client)
 
