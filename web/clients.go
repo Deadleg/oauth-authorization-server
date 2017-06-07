@@ -58,7 +58,7 @@ func (h webHandler) clientsHandler(w http.ResponseWriter, r *http.Request) {
 		SignedInUser: r.Context().Value(auth.SignedInUserContextKey{}).(auth.SignedInUser),
 	}
 
-	t, _ := getTemplate("clients.html")
+	t, err := getTemplate("clients.html")
 	t.Execute(w, map[string]interface{}{
 		"page":           p,
 		csrf.TemplateTag: csrf.Token(r),

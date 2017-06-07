@@ -106,7 +106,7 @@ func (h OAuthHandler) rateLimitMiddleware(rw http.ResponseWriter, r *http.Reques
 				Description: "",
 			},
 		})
-		id, message, err := h.alerter.createAlert(clientID, rateLimitHit)
+		id, message, created, err := h.alerter.createAlert(clientID, rateLimitHit)
 		if err != nil {
 			log.Info(err)
 		} else {
@@ -121,7 +121,7 @@ func (h OAuthHandler) rateLimitMiddleware(rw http.ResponseWriter, r *http.Reques
 			bytes, err := json.Marshal(alert)
 			if err != nil {
 				log.Error(err)
-			} else {
+			} else if created {
 				h.redis.Publish("oauth:"+clientID+":info", string(bytes))
 			}
 		}

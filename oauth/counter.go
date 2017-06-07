@@ -91,7 +91,6 @@ func (c *InMemoryCounter) GetEvents(clientID string) []Event {
 		data = append(data, e)
 	}
 	return data
-	//return *c.counters[clientID].events
 }
 
 func (c *InMemoryCounter) GetEventsFrom(clientID string, last time.Time) []Event {

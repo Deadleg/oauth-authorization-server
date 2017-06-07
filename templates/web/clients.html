@@ -66,7 +66,7 @@
                                         <td class="mdl-data-table__cell--non-numeric"><a href="/account/clients/{{ $client.Client.ID }}">{{ $client.Client.ID }}</a></td>
                                         <td class="mdl-data-table__cell--non-numeric">{{ $client.Client.Secret }}</td>
                                         <td class="mdl-data-table__cell--non-numeric">{{ $client.User.Username }}</td>
-                                        <td class="mdl-data-table__cell--non-numeric">{{ $client.Client.RateLimitPerMinute:want }}</td>
+                                        <td class="mdl-data-table__cell--non-numeric">{{ $client.Client.RateLimitPerMinute }}</td>
                                         <td class="mdl-data-table__cell--non-numeric">
                                             <button id="show-delete-dialog-{{ $client.Client.ID }}" type="button" class="mdl-button mdl-js-button mdl-button--raised mdl-button--accent">Delete</button>
                                             <dialog id="delete-dialog-{{ $client.Client.ID }}" class="mdl-dialog">

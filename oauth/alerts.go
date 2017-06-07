@@ -42,14 +42,27 @@ func (a *Alerter) isAlerting(client string, title string) (bool, error) {
 
 func (a *Alerter) createAlert(client string, title string) (int64, string, bool, error) {
 	result, err := a.db.NamedExec(
-		`INSERT INTO alerts (client, alert_type) 
-		VALUES (:client, (SELECT id FROM alert_types WHERE title=:title))`,
+		`INSERT IGNORE INTO alerts (client, alert_type) 
+		SELECT * FROM (SELECT :client, (SELECT id FROM alert_types WHERE title=:title)) AS tmp
+		WHERE NOT EXISTS (
+			SELECT time 
+			FROM alerts 
+			WHERE time > date_sub(now(), interval 1 minute)
+		) LIMIT 1`,
 		map[string]interface{}{
 			"client": client,
 			"title":  title,
 		})
 	if err != nil {
 		return 0, "", false, err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return 0, "", false, err
+	}
+	if rows == 0 {
+		return 0, "", false, nil
 	}
 
 	message := ""
@@ -63,7 +76,7 @@ func (a *Alerter) createAlert(client string, title string) (int64, string, bool,
 		return 0, "", false, err
 	}
 
-	return id, message, false, nil
+	return id, message, true, nil
 }
 
 func (a *Alerter) GetAlerts(client string) ([]Alert, error) {
@@ -84,7 +97,7 @@ func (a *Alerter) GetAlerts(client string) ([]Alert, error) {
 		INNER JOIN clients c 
 			ON c.id=a.client
 		WHERE a.id in (
-			SELECT max(id) FROM alerts WHERE client='id' GROUP BY UNIX_TIMESTAMP(time) DIV 60
+			SELECT max(id) FROM alerts WHERE client=? GROUP BY UNIX_TIMESTAMP(time) DIV 60
         )
 		LIMIT 5`,
 		client)

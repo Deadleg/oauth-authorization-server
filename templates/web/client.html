@@ -47,7 +47,14 @@
             }
 
             .danger {
-                background-color: #ff8b80;
+                background-color: #f44336;
+            }
+
+            .material-icons.icon-danger {
+                color: #f44336;
+                font-size: 18px;
+                vertical-align: middle;
+                padding-bottom: 6px;
             }
         </style>
     </head>
@@ -175,8 +182,14 @@
                 console.log(e.data);
                 var json = JSON.parse(e.data);
                 json.forEach(function(element) {
-                    $('#alert-body').append('<tr><td class="mdl-data-table__cell--non-numeric">' + 
-                        moment.unix(element.timestamp).format('YY-MM-DD HH:mm a') + 
+                    var date = moment.unix(element.timestamp);
+                    var alarm = "";
+                    if (date.isAfter(moment().subtract(1, 'minutes'))) {
+                        alarm = '<i class="material-icons icon-danger">report_problem</i>';
+                    }
+
+                    $('#alert-body').append('<tr><td class="mdl-data-table__cell--non-numeric">' + alarm + 
+                        date.format('YY-MM-DD HH:mm a') +
                         '</td><td class="mdl-data-table__cell--non-numeric">' + 
                         element.title + 
                         '</td><td class="mdl-data-table__cell--non-numeric">' + 
