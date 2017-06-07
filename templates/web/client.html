@@ -73,7 +73,7 @@
                                             <strong>Secret: </strong><span>{{ .page.Client.Client.Secret }}</span>
                                         </div>
                                         <div class="mdl-cell mdl-cell--4-col">
-                                            <strong>Rate limit: </strong><span>{{ .page.Client.Client.RateLimitPerSecond }}</span>
+                                            <strong>Rate limit per minute: </strong><span>{{ .page.Client.Client.RateLimitPerMinute }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -213,7 +213,7 @@
                 .attr('x', chartWidth/2)
                 .attr('y', margin.top/2)
                 .attr("class", "title")
-                .text("Requests per second");
+                .text("Requests per minute");
 
             var chart = d3.select(".chart")
                     .attr('height', chartHeight)

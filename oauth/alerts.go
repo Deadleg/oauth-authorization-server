@@ -13,7 +13,7 @@ type Alert struct {
 	Title              string `json:"title"`
 	Message            string `json:"message"`
 	Timestamp          int64  `json:"timestamp"`
-	RateLimitPerSecond int    `json:"-" db:"rate_limit_per_second"`
+	RateLimitPerMinute int    `json:"-" db:"rate_limit_per_minute"`
 }
 
 const rateLimitHit = "Ratelimit hit"
@@ -63,7 +63,7 @@ func (a *Alerter) GetAlerts(client string) ([]Alert, error) {
 			a.client AS client, 
 			at.title AS title, 
 			at.message AS message,
-			c.rate_limit_per_second AS rate_limit_per_second
+			c.rate_limit_per_minute AS rate_limit_per_minute
 		FROM alerts a 
 		INNER JOIN alert_types at
 			ON a.alert_type=at.id
@@ -81,7 +81,7 @@ func (a *Alerter) GetAlerts(client string) ([]Alert, error) {
 	values := []Alert{}
 	for _, a := range alerts {
 		if a.Title == "Ratelimit hit" {
-			a.message(a.Message, a.RateLimitPerSecond)
+			a.message(a.Message, a.RateLimitPerMinute)
 		}
 		values = append(values, *a)
 	}

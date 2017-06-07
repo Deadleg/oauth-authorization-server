@@ -18,7 +18,7 @@ type Client struct {
 	Extra              string
 	RedirectURI        string `db:"redirect_uri"`
 	Owner              int
-	RateLimitPerSecond int `db:"rate_limit_per_second"`
+	RateLimitPerMinute int `db:"rate_limit_per_minute"`
 }
 
 // AccessToken entity for "access_token" table

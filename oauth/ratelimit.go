@@ -93,11 +93,11 @@ func (l *RateLimiterPool) makeRateLimiter(clientID string) *RateLimiter {
 
 	now := time.Now()
 	rateLimiter := &RateLimiter{
-		refillRate: client.RateLimitPerSecond,
+		refillRate: client.RateLimitPerMinute,
 		lock:       &sync.Mutex{},
 		lastTaken:  &now,
 		bucket: &Bucket{
-			tokens: client.RateLimitPerSecond,
+			tokens: client.RateLimitPerMinute,
 		},
 	}
 

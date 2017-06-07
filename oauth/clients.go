@@ -38,7 +38,7 @@ func (cs MysqlClientService) GetClients() (*[]Client, error) {
 	clients := &[]Client{}
 	err := cs.db.Select(
 		clients,
-		`SELECT id, secret, extra, redirect_uri, owner, rate_limit_per_second
+		`SELECT id, secret, extra, redirect_uri, owner, rate_limit_per_minute
 		 FROM clients`)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (cs MysqlClientService) GetUsersClients(userID int) (*[]Client, error) {
 	clients := &[]Client{}
 	err := cs.db.Select(
 		clients,
-		`SELECT id, secret, extra, redirect_uri, owner, rate_limit_per_second
+		`SELECT id, secret, extra, redirect_uri, owner, rate_limit_per_minute
 		 FROM clients WHERE owner=?`,
 		userID)
 	if err != nil {
@@ -63,7 +63,7 @@ func (cs MysqlClientService) GetClient(clientID string) (*Client, error) {
 	client := &Client{}
 	err := cs.db.Get(
 		client,
-		`SELECT id, secret, extra, redirect_uri, owner, rate_limit_per_second
+		`SELECT id, secret, extra, redirect_uri, owner, rate_limit_per_minute
 		 FROM clients
 		 WHERE id=?`,
 		clientID)
