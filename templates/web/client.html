@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html>
     <head>
@@ -7,6 +6,7 @@
         <script src="https://cdn.jsdelivr.net/sockjs/1/sockjs.min.js"></script>
         <script src="https://d3js.org/d3.v4.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.6.1/clipboard.min.js"></script>
         <style>
             .chart rect {
                 fill: rgb(33,150,243);
@@ -74,10 +74,13 @@
                                 <div>
                                     <div class="mdl-grid">
                                         <div class="mdl-cell mdl-cell--4-col">
-                                            <strong>ID: </strong><span>{{ .page.Client.Client.ID }}</span>
+                                            <strong>ID: </strong><input class="mdl-textfield__input" id="client-id" type="text" value="{{ .page.Client.Client.ID }}"/>
+                                            <button id="client-id-copy" class="btn mdl-button mdl-js-button mdl-button--primary" data-clipboard-target="#client-id">Copy</button>
+                                            <p for="client-id-copy" class="mdl-tooltip">Copied!</p>
                                         </div>
                                         <div class="mdl-cell mdl-cell--4-col">
-                                            <strong>Secret: </strong><span>{{ .page.Client.Client.Secret }}</span>
+                                            <strong>Secret: </strong><input class="mdl-textfield__input" id="client-secret" type="text" value="{{ .page.Client.Client.Secret }}"/>
+                                            <button class="btn mdl-button mdl-js-button mdl-button--primary" data-clipboard-target="#client-secret">Copy</button>
                                         </div>
                                         <div class="mdl-cell mdl-cell--4-col">
                                             <strong>Rate limit per minute: </strong><span>{{ .page.Client.Client.RateLimitPerMinute }}</span>
@@ -353,8 +356,9 @@
                 x.range([1, graphWidth]);
                 d3.select(".chart")
                     .attr("viewBox", "0 0 " + chartWidth + " " + chartHeight)
-
             }
+
+            new Clipboard('.btn');
         </script>
     </body>
 </html>
