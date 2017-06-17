@@ -56,6 +56,30 @@
                 vertical-align: middle;
                 padding-bottom: 6px;
             }
+        
+            /*
+                Based off of mdl-tooltip.
+            */
+            .tooltip {
+                transform: scale(0);
+                background: rgba(97, 97, 97, 0);
+                border-radius: 2px;
+                transform-origin: top center;
+                z-index: 999;
+                color: #fff;                
+                display: block;
+                font-size: 10px;
+                font-weight: 500;
+                line-height: 14px;
+                max-width: 170px;
+                position: fixed;
+                padding: 8px;
+                text-align: center;
+            }
+
+            .tooltip.active {
+                animation: pulse 200ms cubic-bezier(0,0,.2,1)forwards;
+            }
         </style>
     </head>
     <body>
@@ -74,17 +98,42 @@
                                 <div>
                                     <div class="mdl-grid">
                                         <div class="mdl-cell mdl-cell--4-col">
-                                            <strong>ID: </strong><input class="mdl-textfield__input" id="client-id" type="text" value="{{ .page.Client.Client.ID }}"/>
+                                            <strong>ID</strong><input class="mdl-textfield__input" id="client-id" type="text" value="{{ .page.Client.Client.ID }}"/>
                                             <button id="client-id-copy" class="btn mdl-button mdl-js-button mdl-button--primary" data-clipboard-target="#client-id">Copy</button>
-                                            <p for="client-id-copy" class="mdl-tooltip">Copied!</p>
+                                            <p id="id-copy-tooltip" for="client-id-copy" class="tooltip">Copied!</p>
                                         </div>
                                         <div class="mdl-cell mdl-cell--4-col">
-                                            <strong>Secret: </strong><input class="mdl-textfield__input" id="client-secret" type="text" value="{{ .page.Client.Client.Secret }}"/>
-                                            <button class="btn mdl-button mdl-js-button mdl-button--primary" data-clipboard-target="#client-secret">Copy</button>
+                                            <strong>Secret</strong><input class="mdl-textfield__input" id="client-secret" type="text" value="{{ .page.Client.Client.Secret }}"/>
+                                            <button id="client-secret-copy" class="btn mdl-button mdl-js-button mdl-button--primary" data-clipboard-target="#client-secret">Copy</button>
+                                            <p id="secret-copy-tooltip" for="client-secret-copy" class="tooltip">Copied!</p>
                                         </div>
                                         <div class="mdl-cell mdl-cell--4-col">
                                             <strong>Rate limit per minute: </strong><span>{{ .page.Client.Client.RateLimitPerMinute }}</span>
                                         </div>
+                                            <script>
+                                                $(function() {
+                                                    var idClipboard = new Clipboard('#client-id-copy');
+                                                    var secretClipboard = new Clipboard('#client-secret-copy');
+
+                                                    idClipboard.on('success', function(e) {
+                                                        $('#id-copy-tooltip').addClass('active');
+                                                        $('#id-copy-tooltip').css('background', 'rgba(97, 97, 97, 0.9)');
+                                                        setTimeout(function() {
+                                                            $('#id-copy-tooltip').removeClass('active');
+                                                            $('#id-copy-tooltip').css('background', 'rgba(97, 97, 97, 0)');
+                                                        }, 1000);
+                                                    });
+
+                                                    secretClipboard.on('success', function(e) {
+                                                        $('#secret-copy-tooltip').addClass('active');
+                                                        $('#secret-copy-tooltip').css('background', 'rgba(97, 97, 97, 0.9)');
+                                                        setTimeout(function() {
+                                                            $('#secret-copy-tooltip').removeClass('active');
+                                                            $('#secret-copy-tooltip').css('background', 'rgba(97, 97, 97, 0)');
+                                                        }, 1000);
+                                                    });
+                                                })
+                                            </script>
                                     </div>
                                 </div>
                             </div>
