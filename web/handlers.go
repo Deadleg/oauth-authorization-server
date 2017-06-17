@@ -69,10 +69,10 @@ func SetupHandlers(
 
 	s.Path("/").HandlerFunc(h.indexHandler)
 	s.Methods("GET").Path("/account/clients").HandlerFunc(h.clientsHandler)
+	s.Methods("GET").Path("/account/clients/create").HandlerFunc(h.createClientHandler)
 	s.Methods("GET").Path("/account/clients/{ID}").HandlerFunc(h.clientHandler)
 	s.Methods("GET").Path("/account/clients/{ID}/eventCounts").HandlerFunc(h.clientEventsCount)
 	s.Methods("GET").Path("/account/clients/{ID}/events").HandlerFunc(h.clientEvents)
-	s.Methods("GET").Path("/account/clients/create").HandlerFunc(h.createClientHandler)
 	s.Methods("POST").Path("/account/clients/delete/{ID}").HandlerFunc(h.deleteClientHandler)
 
 	socketHandler := sockjs.NewHandler("/ws/account/clients", sockjs.DefaultOptions, h.activityWebsocket)

@@ -205,7 +205,7 @@
                                                         document.getElementById('loading-spinner-{{ .page.Client.Client.ID }}').style.display = 'block';
                                                         document.getElementById("reload-message-{{ .page.Client.Client.ID }}").style.display = 'block';
                                                         $.post("/account/clients/delete/{{ .page.Client.Client.ID }}", {"gorilla.csrf.Token": "{{ $.csrfField }}"}, function(data) {
-                                                            location.reload();
+                                                            window.location = '/account/clients';
                                                         });
                                                     });
 
