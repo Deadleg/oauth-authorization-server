@@ -1,8 +1,9 @@
 package main
 
 import (
-	"log"
 	"net/http"
+
+	"os"
 
 	"github.com/RangelReale/osin"
 	"github.com/deadleg/oauth-authorization-server/admin"
@@ -16,11 +17,23 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
 	"github.com/urfave/negroni"
+
+	log "github.com/sirupsen/logrus"
 )
+
+var (
+	connectionString string
+)
+
+func init() {
+	connectionString = os.Getenv("DBURL")
+	if connectionString == "" {
+		log.Fatal("No connection string found in DBURL!")
+	}
+}
 
 func main() {
 	cookieName := "auth-server"
-	connectionString := "tick:tick@/tick"
 
 	db, err := sqlx.Connect("mysql", connectionString)
 	if err != nil {
