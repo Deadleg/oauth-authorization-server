@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/deadleg/oauth-authorization-server/users"
+	"github.com/Deadleg/oauth-authorization-server/users"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"

@@ -15,9 +15,9 @@ import (
 
 	"math"
 
-	"github.com/deadleg/oauth-authorization-server/auth"
-	"github.com/deadleg/oauth-authorization-server/oauth"
-	"github.com/deadleg/oauth-authorization-server/users"
+	"github.com/Deadleg/oauth-authorization-server/auth"
+	"github.com/Deadleg/oauth-authorization-server/oauth"
+	"github.com/Deadleg/oauth-authorization-server/users"
 	"github.com/go-redis/redis"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
